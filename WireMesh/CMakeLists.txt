@@ -16,7 +16,7 @@ project(WireMesh)
 # Download and install GeometricTools
 
 ExternalProject_Add(libGTEngine
-	URL https://github.com/vansweej/GeometricTools/archive/feature/upgrade_4.1.zip
+	URL https://github.com/vansweej/GeometricTools/archive/0.2.1.zip
 	DOWNLOAD_NAME "libGTEngine.zip"
 	PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libGTEngine
 	# BUILD_COMMAND ""
