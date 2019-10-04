@@ -17,9 +17,13 @@ public:
 
     virtual void OnIdle() override;
 
+    virtual bool OnResize(int xSize, int ySize) override;
+
 private:
+    Culler mCuller;
+
     bool SetEnvironment();
     bool CreateScene();
-
-    std::shared_ptr<Visual> mMesh;
+    
+    std::shared_ptr<Node> mScene;
 };

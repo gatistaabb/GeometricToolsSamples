@@ -20,9 +20,14 @@ WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
         return;
     }
 
+    // Graphics engine state.
+    mEngine->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f});
+
     InitializeCamera(60.0f, GetAspectRatio(), 0.1f, 100.0f, 0.01f, 0.001f,
         { 0.0f, 0.0f, -2.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f });
     mPVWMatrices.Update();
+
+    mCuller.ComputeVisibleSet(mCamera, mScene);
 }
 
 void WireMeshWindow3::OnIdle()
@@ -32,14 +37,29 @@ void WireMeshWindow3::OnIdle()
     if (mCameraRig.Move())
     {
         mPVWMatrices.Update();
+        mCuller.ComputeVisibleSet(mCamera, mScene);
     }
 
     mEngine->ClearBuffers();
-    mEngine->Draw(mMesh);
-    mEngine->Draw(8, mYSize - 8, { 0.0f, 0.0f, 0.0f, 1.0 }, mTimer.GetFPS());
+
+    for (auto const& visual : mCuller.GetVisibleSet())
+    {
+      mEngine->Draw(visual);
+    }
+
+    mEngine->Draw(8, mYSize - 8, { 1.0f, 1.0f, 1.0f, 1.0 }, mTimer.GetFPS());
     mEngine->DisplayColorBuffer(0);
 
     mTimer.UpdateFrameCount();
+}
+
+bool WireMeshWindow3::OnResize(int xSize, int ySize)
+{
+    if (Window3::OnResize(xSize, ySize))
+    {
+        mCuller.ComputeVisibleSet(mCamera, mScene);
+    }
+    return true;
 }
 
 bool WireMeshWindow3::SetEnvironment()
@@ -73,6 +93,8 @@ bool WireMeshWindow3::SetEnvironment()
 
 bool WireMeshWindow3::CreateScene()
 {
+    mScene = std::make_shared<Node>();
+
     std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
     std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
     std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
@@ -101,12 +123,15 @@ bool WireMeshWindow3::CreateScene()
     vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
     MeshFactory mf;
     mf.SetVertexFormat(vformat);
-    mMesh = mf.CreateSphere(16, 16, 1.0f);
+    std::shared_ptr<Visual> mMesh = mf.CreateSphere(16, 16, 1.0f);
+    mMesh->localTransform.SetTranslation(0.0, 0.0, 10.0);
     mMesh->SetEffect(effect);
 
     mPVWMatrices.Subscribe(mMesh->worldTransform, cbuffer);
 
-    mTrackBall.Attach(mMesh);
-    mTrackBall.Update();
+    mScene->AttachChild(mMesh);
+
+    mScene->Update();
+
     return true;
 }
