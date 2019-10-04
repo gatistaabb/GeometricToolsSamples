@@ -9,6 +9,8 @@
 #include "WireMeshWindow3.h"
 #include <Graphics/MeshFactory.h>
 
+#define SPHERE_COUNT 10
+
 WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
     :
     Window3(parameters)
@@ -95,42 +97,170 @@ bool WireMeshWindow3::CreateScene()
 {
     mScene = std::make_shared<Node>();
 
-    std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
-    std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
-    std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
+	for (int i = 0; i < SPHERE_COUNT; i++)
+	{
+		std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
+		std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
+		std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
 
-    auto program = mProgramFactory->CreateFromFiles(vsPath, psPath, gsPath);
-    if (!program)
-    {
-        return false;
-    }
+		auto program = mProgramFactory->CreateFromFiles(vsPath, psPath, gsPath);
+		if (!program)
+		{
+			return false;
+		}
 
-    auto parameters = std::make_shared<ConstantBuffer>(3 * sizeof(Vector4<float>), false);
-    auto* data = parameters->Get<Vector4<float>>();
-    data[0] = { 0.0f, 0.0f, 1.0f, 1.0f };  // mesh color
-    data[1] = { 0.0f, 0.0f, 0.0f, 1.0f };  // edge color
-    data[2] = { static_cast<float>(mXSize), static_cast<float>(mYSize), 0.0f, 0.0f };
-    program->GetVertexShader()->Set("WireParameters", parameters);
-    program->GetPixelShader()->Set("WireParameters", parameters);
-    program->GetGeometryShader()->Set("WireParameters", parameters);
+		auto parameters = std::make_shared<ConstantBuffer>(3 * sizeof(Vector4<float>), false);
+		auto* data = parameters->Get<Vector4<float>>();
+		data[0] = { 0.0f, 0.0f, 1.0f, 1.0f };  // mesh color
+		data[1] = { 0.0f, 0.0f, 0.0f, 1.0f };  // edge color
+		data[2] = { static_cast<float>(mXSize), static_cast<float>(mYSize), 0.0f, 0.0f };
+		program->GetVertexShader()->Set("WireParameters", parameters);
+		program->GetPixelShader()->Set("WireParameters", parameters);
+		program->GetGeometryShader()->Set("WireParameters", parameters);
+		
+		auto cbuffer = std::make_shared<ConstantBuffer>(sizeof(Matrix4x4<float>), true);
+		program->GetVertexShader()->Set("PVWMatrix", cbuffer);
 
-    auto cbuffer = std::make_shared<ConstantBuffer>(sizeof(Matrix4x4<float>), true);
-    program->GetVertexShader()->Set("PVWMatrix", cbuffer);
+		auto effect = std::make_shared<VisualEffect>(program);
 
-    auto effect = std::make_shared<VisualEffect>(program);
+		VertexFormat vformat;
+		vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
+		MeshFactory mf;
+		mf.SetVertexFormat(vformat);
+		std::shared_ptr<Visual> Spheres;
 
-    VertexFormat vformat;
-    vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
-    MeshFactory mf;
-    mf.SetVertexFormat(vformat);
-    std::shared_ptr<Visual> mMesh = mf.CreateSphere(16, 16, 1.0f);
-    mMesh->localTransform.SetTranslation(0.0, 0.0, 10.0);
-    mMesh->SetEffect(effect);
+		Spheres = mf.CreateSphere(16, 16, 1.0f);
+		Spheres->localTransform.SetTranslation(2*i - SPHERE_COUNT + 1, 0.0, 10.0);
+		Spheres->SetEffect(effect);
 
-    mPVWMatrices.Subscribe(mMesh->worldTransform, cbuffer);
+		mPVWMatrices.Subscribe(Spheres->worldTransform, cbuffer);
 
-    mScene->AttachChild(mMesh);
+		mScene->AttachChild(Spheres);
+	}
+	
+	for (int i = 0; i < SPHERE_COUNT; i++)
+	{
+		std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
+		std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
+		std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
 
+		auto program = mProgramFactory->CreateFromFiles(vsPath, psPath, gsPath);
+		if (!program)
+		{
+			return false;
+		}
+
+		auto parameters = std::make_shared<ConstantBuffer>(3 * sizeof(Vector4<float>), false);
+		auto* data = parameters->Get<Vector4<float>>();
+		data[0] = { 0.0f, 0.0f, 1.0f, 1.0f };  // mesh color
+		data[1] = { 0.0f, 0.0f, 0.0f, 1.0f };  // edge color
+		data[2] = { static_cast<float>(mXSize), static_cast<float>(mYSize), 0.0f, 0.0f };
+		program->GetVertexShader()->Set("WireParameters", parameters);
+		program->GetPixelShader()->Set("WireParameters", parameters);
+		program->GetGeometryShader()->Set("WireParameters", parameters);
+
+		auto cbuffer = std::make_shared<ConstantBuffer>(sizeof(Matrix4x4<float>), true);
+		program->GetVertexShader()->Set("PVWMatrix", cbuffer);
+
+		auto effect = std::make_shared<VisualEffect>(program);
+
+		VertexFormat vformat;
+		vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
+		MeshFactory mf;
+		mf.SetVertexFormat(vformat);
+		std::shared_ptr<Visual> Spheres;
+
+		Spheres = mf.CreateSphere(16, 16, 1.0f);
+		Spheres->localTransform.SetTranslation(2 * i - SPHERE_COUNT + 1, 0.0, -10.0);
+		Spheres->SetEffect(effect);
+
+		mPVWMatrices.Subscribe(Spheres->worldTransform, cbuffer);
+
+		mScene->AttachChild(Spheres);
+	}
+
+	for (int i = 0; i < SPHERE_COUNT; i++)
+	{
+		std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
+		std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
+		std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
+
+		auto program = mProgramFactory->CreateFromFiles(vsPath, psPath, gsPath);
+		if (!program)
+		{
+			return false;
+		}
+
+		auto parameters = std::make_shared<ConstantBuffer>(3 * sizeof(Vector4<float>), false);
+		auto* data = parameters->Get<Vector4<float>>();
+		data[0] = { 0.0f, 0.0f, 1.0f, 1.0f };  // mesh color
+		data[1] = { 0.0f, 0.0f, 0.0f, 1.0f };  // edge color
+		data[2] = { static_cast<float>(mXSize), static_cast<float>(mYSize), 0.0f, 0.0f };
+		program->GetVertexShader()->Set("WireParameters", parameters);
+		program->GetPixelShader()->Set("WireParameters", parameters);
+		program->GetGeometryShader()->Set("WireParameters", parameters);
+
+		auto cbuffer = std::make_shared<ConstantBuffer>(sizeof(Matrix4x4<float>), true);
+		program->GetVertexShader()->Set("PVWMatrix", cbuffer);
+
+		auto effect = std::make_shared<VisualEffect>(program);
+
+		VertexFormat vformat;
+		vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
+		MeshFactory mf;
+		mf.SetVertexFormat(vformat);
+		std::shared_ptr<Visual> Spheres;
+
+		Spheres = mf.CreateTorus(16, 16, 1.0f, 0.5f);
+		Spheres->localTransform.SetTranslation(- SPHERE_COUNT + 1, 0.0, 9 - 2 * i);
+		Spheres->SetEffect(effect);
+
+		mPVWMatrices.Subscribe(Spheres->worldTransform, cbuffer);
+
+		mScene->AttachChild(Spheres);
+	}
+
+	for (int i = 0; i < SPHERE_COUNT; i++)
+	{
+		std::string vsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.vs"));
+		std::string psPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.ps"));
+		std::string gsPath = mEnvironment.GetPath(mEngine->GetShaderName("WireMesh.gs"));
+
+		auto program = mProgramFactory->CreateFromFiles(vsPath, psPath, gsPath);
+		if (!program)
+		{
+			return false;
+		}
+
+		auto parameters = std::make_shared<ConstantBuffer>(3 * sizeof(Vector4<float>), false);
+		auto* data = parameters->Get<Vector4<float>>();
+		data[0] = { 0.0f, 0.0f, 1.0f, 1.0f };  // mesh color
+		data[1] = { 0.0f, 0.0f, 0.0f, 1.0f };  // edge color
+		data[2] = { static_cast<float>(mXSize), static_cast<float>(mYSize), 0.0f, 0.0f };
+		program->GetVertexShader()->Set("WireParameters", parameters);
+		program->GetPixelShader()->Set("WireParameters", parameters);
+		program->GetGeometryShader()->Set("WireParameters", parameters);
+
+		auto cbuffer = std::make_shared<ConstantBuffer>(sizeof(Matrix4x4<float>), true);
+		program->GetVertexShader()->Set("PVWMatrix", cbuffer);
+
+		auto effect = std::make_shared<VisualEffect>(program);
+
+		VertexFormat vformat;
+		vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
+		MeshFactory mf;
+		mf.SetVertexFormat(vformat);
+		std::shared_ptr<Visual> Spheres;
+
+		Spheres = mf.CreateOctahedron();
+		Spheres->localTransform.SetTranslation(SPHERE_COUNT, 0.0, 9 - 2 * i);
+		Spheres->SetEffect(effect);
+
+		mPVWMatrices.Subscribe(Spheres->worldTransform, cbuffer);
+
+		mScene->AttachChild(Spheres);
+	}
+	
     mScene->Update();
 
     return true;
