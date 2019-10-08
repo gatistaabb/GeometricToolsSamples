@@ -70,7 +70,7 @@ bool WireMeshWindow3::SetEnvironment()
         return false;
     }
 
-    mEnvironment.Insert(path + "/Samples/Graphics/WireMesh/Shaders/");
+    mEnvironment.Insert(path + "/Samples/Graphics/AnimatedWireMesh/Shaders/");
 
     std::vector<std::string> inputs =
     {
