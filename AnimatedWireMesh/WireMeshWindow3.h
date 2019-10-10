@@ -8,6 +8,8 @@
 #pragma once
 
 #include <Applications/Window3.h>
+#include <Graphics/KeyframeController.h>
+
 using namespace gte;
 
 class WireMeshWindow3 : public Window3
@@ -25,5 +27,9 @@ private:
     bool SetEnvironment();
     bool CreateScene();
     
+    std::shared_ptr<KeyframeController> mSphereController;
+
     std::shared_ptr<Node> mScene;
+
+    double mApplicationTime, mApplicationDeltaTime;
 };

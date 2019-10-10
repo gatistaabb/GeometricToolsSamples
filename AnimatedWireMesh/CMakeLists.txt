@@ -10,7 +10,7 @@ else()
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D__LINUX__ -DGTE_DEV_OPENGL -DGTE_USE_LINUX -DGTE_DISABLE_PCH")
 endif()
 
-project(WireMesh)
+project(AnimatedWireMesh)
 
 ##################################
 # Download and install GeometricTools
