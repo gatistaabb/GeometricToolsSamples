@@ -19,11 +19,15 @@ public:
 
     virtual bool OnResize(int xSize, int ySize) override;
 
+	virtual bool OnCharPress(unsigned char key, int x, int y) override;
+
 private:
     Culler mCuller;
 
     bool SetEnvironment();
     bool CreateScene();
+	void RotateCamera(gte::Vector3<float> amount);
     
     std::shared_ptr<Node> mScene;
+	std::shared_ptr<Visual*> culledScene;
 };
