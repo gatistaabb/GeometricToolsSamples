@@ -10,7 +10,7 @@ else()
     SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D__LINUX__ -DGTE_DEV_OPENGL -DGTE_USE_LINUX -DGTE_DISABLE_PCH -DGTE_USE_COLUMN_MAJOR -DGTE_USE_VEC_MAT -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS -DUNICODE -D_UNICODE")
 endif()
 
-project(AnimatedWireMesh)
+project(GLTFWireMesh)
 
 ##################################
 # Download and install GeometricTools
@@ -44,6 +44,10 @@ add_executable(
 	WireMeshMain.cpp
 	WireMeshWindow3.cpp
 	WireMeshWindow3.h
+	MouseMoveWindow3.h
+	MouseMoveWindow3.cpp
+	FreeMouseCameraRig.h
+	FreeMouseCameraRig.cpp
 	)
 
 target_include_directories( ${PROJECT_NAME} PUBLIC ${LIBGTENGINE_INCLUDE_DIR} )
