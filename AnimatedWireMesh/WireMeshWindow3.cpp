@@ -8,10 +8,13 @@
 #include <iostream>
 #include "WireMeshWindow3.h"
 #include <Graphics/MeshFactory.h>
+#include <Mathematics/Transform.h>
 
 WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
     :
-    Window3(parameters)
+    Window3(parameters),
+    mApplicationTime(0.0),
+    mApplicationDeltaTime(0.001)
 {
 
     if (!SetEnvironment() || !CreateScene())
@@ -26,19 +29,19 @@ WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
     InitializeCamera(60.0f, GetAspectRatio(), 0.1f, 100.0f, 0.01f, 0.001f,
         { 0.0f, 0.0f, -2.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f });
     mPVWMatrices.Update();
-
-    mCuller.ComputeVisibleSet(mCamera, mScene);
 }
 
 void WireMeshWindow3::OnIdle()
 {
     mTimer.Measure();
 
-    if (mCameraRig.Move())
-    {
-        mPVWMatrices.Update();
-        mCuller.ComputeVisibleSet(mCamera, mScene);
-    }
+    mScene->Update(mApplicationTime);
+    mApplicationTime += mApplicationDeltaTime;
+
+    mCameraRig.Move();
+    mPVWMatrices.Update();    
+
+    mCuller.ComputeVisibleSet(mCamera, mScene);
 
     mEngine->ClearBuffers();
 
@@ -123,14 +126,29 @@ bool WireMeshWindow3::CreateScene()
     vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
     MeshFactory mf;
     mf.SetVertexFormat(vformat);
+
+    // Create a controller
+    mSphereController = std::make_shared<KeyframeController>(0, 4, 0, 0, Transform<float>());
+    int numTranslations = mSphereController->GetNumTranslations();
+    Vector4<float>* Translations = mSphereController->GetTranslations();
+    float* TranslationTimes = mSphereController->GetTranslationTimes();
+    for(int i = 0; i < numTranslations; ++i) {
+        Translations[i] = {0.0f, 0.0f, static_cast<float>(i), 1.0f};
+        TranslationTimes[i] = static_cast<float>(i) * 10.0;
+    }
+    mSphereController->minTime = 0.0;
+    mSphereController->maxTime = 40.0;
+
     std::shared_ptr<Visual> mMesh = mf.CreateSphere(16, 16, 1.0f);
-    mMesh->localTransform.SetTranslation(0.0, 0.0, 5.0);
+    mMesh->localTransform.SetTranslation(0.0, 0.0, 0.0);
     mMesh->SetEffect(effect);
+    mMesh->AttachController(mSphereController);
     mPVWMatrices.Subscribe(mMesh->worldTransform, cbuffer);
 
     mScene->AttachChild(mMesh);
 
     mScene->Update();
+
 
     return true;
 }

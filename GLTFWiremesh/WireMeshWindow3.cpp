@@ -8,10 +8,13 @@
 #include <iostream>
 #include "WireMeshWindow3.h"
 #include <Graphics/MeshFactory.h>
+#include <Mathematics/Transform.h>
 
 WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
     :
-    Window3(parameters)
+    MouseMoveWindow3(parameters),
+    mApplicationTime(0.0),
+    mApplicationDeltaTime(0.001)
 {
 
     if (!SetEnvironment() || !CreateScene())
@@ -24,21 +27,18 @@ WireMeshWindow3::WireMeshWindow3(Parameters& parameters)
     mEngine->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f});
 
     InitializeCamera(60.0f, GetAspectRatio(), 0.1f, 100.0f, 0.01f, 0.001f,
-        { 0.0f, 0.0f, -2.5f }, { 0.0f, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f });
+        { 0.0f, 0.0f, 2.5f }, { 0.0f, 0.0f, -1.0f }, { 0.0f, 1.0f, 0.0f });
     mPVWMatrices.Update();
-
-    mCuller.ComputeVisibleSet(mCamera, mScene);
 }
 
 void WireMeshWindow3::OnIdle()
 {
     mTimer.Measure();
 
-    if (mCameraRig.Move())
-    {
-        mPVWMatrices.Update();
-        mCuller.ComputeVisibleSet(mCamera, mScene);
-    }
+    mFreeMouseCameraRig.Move();
+    mPVWMatrices.Update();    
+
+    mCuller.ComputeVisibleSet(mCamera, mScene);
 
     mEngine->ClearBuffers();
 
@@ -55,7 +55,7 @@ void WireMeshWindow3::OnIdle()
 
 bool WireMeshWindow3::OnResize(int xSize, int ySize)
 {
-    if (Window3::OnResize(xSize, ySize))
+    if (MouseMoveWindow3::OnResize(xSize, ySize))
     {
         mCuller.ComputeVisibleSet(mCamera, mScene);
     }
@@ -123,14 +123,17 @@ bool WireMeshWindow3::CreateScene()
     vformat.Bind(VA_POSITION, DF_R32G32B32_FLOAT, 0);
     MeshFactory mf;
     mf.SetVertexFormat(vformat);
+
     std::shared_ptr<Visual> mMesh = mf.CreateSphere(16, 16, 1.0f);
-    mMesh->localTransform.SetTranslation(0.0, 0.0, 5.0);
+    mMesh->localTransform.SetTranslation(0.0, 0.0, 0.0);
     mMesh->SetEffect(effect);
+
     mPVWMatrices.Subscribe(mMesh->worldTransform, cbuffer);
 
     mScene->AttachChild(mMesh);
 
     mScene->Update();
+
 
     return true;
 }
