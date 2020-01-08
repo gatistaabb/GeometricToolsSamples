@@ -19,7 +19,7 @@ public:
 
     virtual bool OnResize(int xSize, int ySize) override;
 
-	virtual bool OnCharPress(unsigned char key, int x, int y) override;
+	//virtual bool OnCharPress(unsigned char key, int x, int y) override;
 
 private:
     Culler mCuller;

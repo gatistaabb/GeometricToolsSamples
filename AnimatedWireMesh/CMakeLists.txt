@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 if(WIN32)
 	SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DGTE_USE_DIRECTX -DGTE_USE_MSWINDOWS -DGTE_USE_ROW_MAJOR -DGTE_USE_MAT_VEC -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS -DUNICODE -D_UNICODE")
 else()
-    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D__LINUX__ -DGTE_DEV_OPENGL -DGTE_USE_LINUX -DGTE_DISABLE_PCH -DGTE_USE_COLUMN_MAJOR -DGTE_USE_VEC_MAT -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS -DUNICODE -D_UNICODE")
+    SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -D__LINUX__ -DGTE_DEV_OPENGL -DGTE_USE_LINUX -DGTE_DISABLE_PCH")
 endif()
 
 project(AnimatedWireMesh)
@@ -15,14 +15,16 @@ project(AnimatedWireMesh)
 ##################################
 # Download and install GeometricTools
 
-ExternalProject_Add(libGTEngine
+ExternalProject_Add(libGTEngineProj
 	URL https://github.com/vansweej/GeometricTools/archive/feature/fix_windows_build.zip
 	DOWNLOAD_NAME "libGTEngine.zip"
 	PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libGTEngine
 	# BUILD_COMMAND ""
+	CMAKE_ARGS ${CMAKE_CXX_FLAGS}
+	BUILD_BYPRODUCTS <BINARY_DIR>/GTEngine.lib
 	INSTALL_COMMAND ""
 	)
-ExternalProject_Get_Property(libGTEngine source_dir binary_dir)
+ExternalProject_Get_Property(libGTEngineProj source_dir binary_dir)
 MESSAGE( STATUS "libGTEngine source_dir: " ${source_dir} )
 MESSAGE( STATUS "libGTEngine binary_dir: " ${binary_dir} )
 set(LIBGTENGINE_INCLUDE_DIR ${source_dir}/include)
@@ -45,6 +47,8 @@ add_executable(
 	WireMeshWindow3.cpp
 	WireMeshWindow3.h
 	)
+
+add_dependencies(${PROJECT_NAME} libGTEngineProj)
 
 target_include_directories( ${PROJECT_NAME} PUBLIC ${LIBGTENGINE_INCLUDE_DIR} )
 

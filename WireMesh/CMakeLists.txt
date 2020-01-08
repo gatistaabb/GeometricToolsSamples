@@ -15,14 +15,16 @@ project(WireMesh)
 ##################################
 # Download and install GeometricTools
 
-ExternalProject_Add(libGTEngine
+ExternalProject_Add(libGTEngineProj
 	URL https://github.com/vansweej/GeometricTools/archive/feature/fix_windows_build.zip
 	DOWNLOAD_NAME "libGTEngine.zip"
 	PREFIX ${CMAKE_CURRENT_BINARY_DIR}/libGTEngine
 	# BUILD_COMMAND ""
+	CMAKE_ARGS ${CMAKE_CXX_FLAGS}
+	BUILD_BYPRODUCTS <BINARY_DIR>/GTEngine.lib
 	INSTALL_COMMAND ""
 	)
-ExternalProject_Get_Property(libGTEngine source_dir binary_dir)
+ExternalProject_Get_Property(libGTEngineProj source_dir binary_dir)
 MESSAGE( STATUS "libGTEngine source_dir: " ${source_dir} )
 MESSAGE( STATUS "libGTEngine binary_dir: " ${binary_dir} )
 set(LIBGTENGINE_INCLUDE_DIR ${source_dir}/include)
@@ -45,6 +47,8 @@ add_executable(
 	WireMeshWindow3.cpp
 	WireMeshWindow3.h
 	)
+
+add_dependencies(${PROJECT_NAME} libGTEngineProj)
 
 target_include_directories( ${PROJECT_NAME} PUBLIC ${LIBGTENGINE_INCLUDE_DIR} )
 
